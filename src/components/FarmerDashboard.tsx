@@ -4,8 +4,10 @@ import MarketTrends from "./MarketTrends";
 import { AlertTriangle, Cloud, Sun, Droplets, ArrowRight, CheckCircle, X } from "lucide-react";
 import { toast } from "../hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useUser } from "@/context/UserContext";
 
 const FarmerDashboard: React.FC = () => {
+  const { fullName } = useUser();
   // Get current date for the header
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
@@ -84,11 +86,11 @@ const FarmerDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-agri-text">Hi, Rajesh</h1>
+          <h1 className="text-2xl font-bold text-agri-text">Hi, {fullName}</h1>
           <p className="text-sm text-gray-500">{formattedDate}</p>
         </div>
         <div className="bg-agri-primary text-white w-10 h-10 rounded-full flex items-center justify-center">
-          <span className="font-medium">R</span>
+          <span className="font-medium">{fullName[0]}</span>
         </div>
       </div>
       

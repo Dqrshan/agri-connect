@@ -38,9 +38,9 @@ const Welcome: React.FC = () => {
           isAnimated ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="space-y-4">
+        <div className="space-y-8 gap-4">
           <Link to="/login">
-            <button className="w-full py-3 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors">
+            <button className="mb-2 w-full py-3 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors">
               Log In
             </button>
           </Link>
@@ -54,16 +54,6 @@ const Welcome: React.FC = () => {
             By continuing, you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>
-      </div>
-      
-      <div 
-        className={`text-center mt-8 transition-all duration-1000 delay-600 ${
-          isAnimated ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <p className="text-indigo-600 font-medium">
-          The simple way to connect with agricultural markets
-        </p>
       </div>
     </div>
   );

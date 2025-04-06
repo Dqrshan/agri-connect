@@ -9,7 +9,16 @@ import { toast } from "../hooks/use-toast";
 
 interface AuthProps {
   type: "login" | "signup" | "otp";
-  onNavigate: (page: "login" | "signup" | "otp" | "dashboard") => void;
+  onNavigate: (page: "login" | "signup" | "otp" | "dashboard" | "welcome") => void;
+}
+
+interface UserProfile {
+  phoneNumber: string;
+  fullName: string;
+  state: string;
+  city: string;
+  role: "farmer" | "buyer";
+  createdAt: string;
 }
 
 const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
@@ -47,7 +56,27 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
     if (city) sessionStorage.setItem("auth_city", city);
     if (role) sessionStorage.setItem("auth_role", role);
   }, [phoneNumber, fullName, state, city, role]);
-  
+
+  // Store user profile in localStorage
+  const storeUserProfile = (user: UserProfile) => {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const existingUserIndex = users.findIndex((u: UserProfile) => u.phoneNumber === user.phoneNumber);
+    
+    if (existingUserIndex >= 0) {
+      users[existingUserIndex] = user; // Update existing user
+    } else {
+      users.push(user); // Add new user
+    }
+    
+    localStorage.setItem("users", JSON.stringify(users));
+  };
+
+  // Retrieve user profile from localStorage
+  const getUserProfile = (phone: string): UserProfile | null => {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    return users.find((user: UserProfile) => user.phoneNumber === phone) || null;
+  };
+
   const handleOtpChange = (value: string) => {
     setOtp(value.split("").concat(Array(6 - value.length).fill("")));
   };
@@ -58,7 +87,19 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
     
     setTimeout(() => {
       if (type === "login") {
-        // In a real app, this would verify the phone number with your backend
+        // Check if user exists
+        const user = getUserProfile(phoneNumber);
+        if (!user) {
+          toast({
+            title: "User Not Found",
+            description: "No account found with this phone number. Please sign up.",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Generate and send OTP
         const newOTP = generateOTP();
         storeOTP(phoneNumber, newOTP);
         setSentOTP(newOTP);
@@ -68,8 +109,20 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
           description: `OTP has been sent to ${phoneNumber}. For demo: ${newOTP}`,
         });
         onNavigate("otp");
-      } else if (type === "signup") {
-        // In a real app, this would register the user and send OTP
+      } 
+      else if (type === "signup") {
+        // Check if user already exists
+        if (getUserProfile(phoneNumber)) {
+          toast({
+            title: "Account Exists",
+            description: "An account with this phone number already exists. Please login.",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Generate and send OTP
         const newOTP = generateOTP();
         storeOTP(phoneNumber, newOTP);
         setSentOTP(newOTP);
@@ -79,19 +132,53 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
           description: `OTP has been sent to ${phoneNumber}. For demo: ${newOTP}`,
         });
         onNavigate("otp");
-      } else if (type === "otp") {
+      } 
+      else if (type === "otp") {
         const inputOTP = otp.join("");
         const storedOTP = retrieveOTP(phoneNumber);
         
         if (mockVerifyOTP(inputOTP, storedOTP || sentOTP)) {
           // OTP is valid, authenticate the user
-          login(
-            phoneNumber, 
-            role as "farmer" | "buyer",
-            fullName,
-            state,
-            city
-          );
+          if (!role) {
+            // For login flow, get role from stored profile
+            const user = getUserProfile(phoneNumber);
+            if (!user) {
+              toast({
+                title: "Error",
+                description: "User profile not found",
+                variant: "destructive",
+              });
+              setIsSubmitting(false);
+              return;
+            }
+            
+            login(
+              phoneNumber, 
+              user.role,
+              user.fullName,
+              user.state,
+              user.city
+            );
+          } else {
+            // For signup flow, create new profile
+            const newUser: UserProfile = {
+              phoneNumber,
+              fullName,
+              state,
+              city,
+              role: role as "farmer" | "buyer",
+              createdAt: new Date().toISOString()
+            };
+            
+            storeUserProfile(newUser);
+            login(
+              phoneNumber, 
+              role as "farmer" | "buyer",
+              fullName,
+              state,
+              city
+            );
+          }
           
           // Clear the OTP and session data
           clearOTP(phoneNumber);
@@ -141,7 +228,7 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
     <div className="w-full max-w-md mx-auto p-4">
       <div className="mb-6 flex items-center">
         <button 
-          onClick={() => onNavigate(type === "otp" ? (phoneNumber ? "login" : "signup") : "login")} 
+          onClick={() => onNavigate(type === "otp" ? (phoneNumber ? "login" : "signup") : "welcome")} 
           className="inline-flex items-center text-gray-700"
         >
           <ArrowLeft size={20} className="mr-2" />

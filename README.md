@@ -1,73 +1,85 @@
-# Welcome to your Lovable project
+# AgriConnect
 
-## Project info
+## Connecting Farmers and Buyers through Technology
 
-**URL**: https://lovable.dev/projects/b14973b2-bae5-4a0a-afab-db945970e775
+AgriConnect is a mobile application designed to bridge the gap between agricultural producers and buyers. The app provides market insights, crop management tools, and direct transaction capabilities in a simple, accessible interface optimized for smartphones.
 
-## How can I edit this code?
+## 🌾 Features
 
-There are several ways of editing your application.
+### For Farmers
+- **Market Insights:** Real-time data on top-selling vegetables and price trends
+- **Crop Management:** Track planting, irrigation, and fertilizer application
+- **AI Crop Analysis:** Scan crops with your camera to receive health reports
+- **Transaction History:** View and manage all buyer interactions
+- **Personalized Updates:** Receive timely recommendations for irrigation, harvesting, and market conditions
 
-**Use Lovable**
+### For Buyers
+- **Discover Local Produce:** Find farmers in your area and their available crops
+- **Market Trends:** Stay updated on price fluctuations and availability
+- **Agricultural News:** AI-generated updates relevant to your interests
+- **Transaction Management:** Track all purchases and interactions with farmers
+- **Preference-Based Recommendations:** Receive alerts when preferred crops become available
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b14973b2-bae5-4a0a-afab-db945970e775) and start prompting.
+## 📱 Mobile-First Design
+AgriConnect is exclusively designed for mobile devices, providing a streamlined experience for users in the field or on the go.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Tech Stack
 
-**Use your preferred IDE**
+- **Stack:** React & Vite with TypeScript
+- **Database:** Local Storage
+- **AI Integration:** Google Gemini API
+- **Authentication:** OTP-based phone verification
+- **Visualization:** Chart.js for data visualization
+- **Hosting:** Netlify
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📋 Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js 18.0.0 or later
+- npm
+- Gemini API key (free tier)
 
-Follow these steps:
+## 🔧 Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. Clone the repository:
+```bash
+git clone https://github.com/Dqrshan/agri-connect.git
+cd agri-connect
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Install dependencies:
+```bash
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+Then edit `.env.local` with your API keys and configuration.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Run the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+5. Open [http://localhost:3000](http://localhost:3000) with your mobile device or using responsive design mode in your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📱 Screenshots
 
-**Use GitHub Codespaces**
+![Welcome Screen](https://via.placeholder.com/250x500)
+![Farmer Dashboard](https://via.placeholder.com/250x500)
+![Crop Analysis](https://via.placeholder.com/250x500)
+![Transactions](https://via.placeholder.com/250x500)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🙏 Acknowledgments
 
-## What technologies are used for this project?
+- Thanks to all the farmers and buyers who provided feedback during the design phase
+- [Gemini API](https://ai.google.dev/) for providing AI capabilities
+- [Supabase](https://supabase.io/) for the database infrastructure
+- [Next.js](https://nextjs.org/) for the development framework
+- [Vercel](https://vercel.com/) for hosting
 
-This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/b14973b2-bae5-4a0a-afab-db945970e775) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Made with ❤️ for the agricultural community

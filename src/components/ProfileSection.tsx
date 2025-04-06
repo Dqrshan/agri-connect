@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "../context/UserContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,51 +50,62 @@ interface BuyerPreference {
 const ProfileSection: React.FC<ProfileSectionProps> = ({ role, onLogout }) => {
   const { fullName, phoneNumber, state, city } = useUser();
 
-  // Farmer specific states
-  const [crops, setCrops] = useState<CropInfo[]>([
-    {
-      id: "crop1",
-      name: "Tomatoes",
-      variety: "Roma",
-      sowingDate: "2025-02-15",
-      area: "0.5 acre",
-      notes: "Growing well, expecting harvest in May"
-    }
-  ]);
-  
-  const [fertilizers, setFertilizers] = useState<FertilizerApplication[]>([
-    {
-      id: "fert1",
-      cropId: "crop1",
-      date: "2025-03-10",
-      name: "NPK 14-14-14",
-      quantity: "50 kg",
-      notes: "Applied before rainfall"
-    }
-  ]);
-  
-  const [irrigationEvents, setIrrigationEvents] = useState<IrrigationEvent[]>([
-    {
-      id: "irr1",
-      cropId: "crop1",
-      date: "2025-03-20",
-      duration: "2 hours",
-      method: "Drip irrigation",
-      notes: "Regular weekly irrigation"
-    }
-  ]);
+  // Load data from localStorage on component mount
+  const [crops, setCrops] = useState<CropInfo[]>(() => {
+    const saved = localStorage.getItem('cropData');
+    return saved ? JSON.parse(saved).crops : [
+      {
+        id: "crop1",
+        name: "Tomatoes",
+        variety: "Roma",
+        sowingDate: "2025-02-15",
+        area: "0.5 acre",
+        notes: "Growing well, expecting harvest in May"
+      }
+    ];
+  });
 
-  // Buyer specific states
-  const [buyerPreferences, setBuyerPreferences] = useState<BuyerPreference[]>([
-    {
-      id: "pref1",
-      cropType: "Tomatoes",
-      quantity: "100-200 kg weekly",
-      qualityPreference: "Grade A, organic preferred",
-      priceRange: "₹40-50 per kg",
-      location: "Within 20km of Pune"
-    }
-  ]);
+  const [fertilizers, setFertilizers] = useState<FertilizerApplication[]>(() => {
+    const saved = localStorage.getItem('cropData');
+    return saved ? JSON.parse(saved).fertilizers : [
+      {
+        id: "fert1",
+        cropId: "crop1",
+        date: "2025-03-10",
+        name: "NPK 14-14-14",
+        quantity: "50 kg",
+        notes: "Applied before rainfall"
+      }
+    ];
+  });
+
+  const [irrigationEvents, setIrrigationEvents] = useState<IrrigationEvent[]>(() => {
+    const saved = localStorage.getItem('cropData');
+    return saved ? JSON.parse(saved).irrigation : [
+      {
+        id: "irr1",
+        cropId: "crop1",
+        date: "2025-03-20",
+        duration: "2 hours",
+        method: "Drip irrigation",
+        notes: "Regular weekly irrigation"
+      }
+    ];
+  });
+
+  const [buyerPreferences, setBuyerPreferences] = useState<BuyerPreference[]>(() => {
+    const saved = localStorage.getItem('buyerPreferences');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: "pref1",
+        cropType: "Tomatoes",
+        quantity: "100-200 kg weekly",
+        qualityPreference: "Grade A, organic preferred",
+        priceRange: "₹40-50 per kg",
+        location: "Within 20km of Pune"
+      }
+    ];
+  });
 
   // Form states
   const [newCrop, setNewCrop] = useState({
@@ -130,6 +140,25 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ role, onLogout }) => {
     location: ""
   });
 
+  // Save all farmer data to localStorage whenever it changes
+  useEffect(() => {
+    if (role === "farmer") {
+      const farmerData = {
+        crops,
+        fertilizers,
+        irrigation: irrigationEvents
+      };
+      localStorage.setItem('cropData', JSON.stringify(farmerData));
+    }
+  }, [crops, fertilizers, irrigationEvents, role]);
+
+  // Save buyer preferences to localStorage whenever they change
+  useEffect(() => {
+    if (role === "buyer") {
+      localStorage.setItem('buyerPreferences', JSON.stringify(buyerPreferences));
+    }
+  }, [buyerPreferences, role]);
+
   // Handlers
   const handleAddCrop = () => {
     if (!newCrop.name || !newCrop.sowingDate) {
@@ -142,7 +171,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ role, onLogout }) => {
     }
     
     const crop: CropInfo = {
-      id: `crop${Date.now()}`,
+      id: `crop-${Date.now()}`,
       ...newCrop
     };
     
@@ -182,7 +211,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ role, onLogout }) => {
     }
     
     const fertilizer: FertilizerApplication = {
-      id: `fert${Date.now()}`,
+      id: `fert-${Date.now()}`,
       ...newFertilizer
     };
     
@@ -212,7 +241,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ role, onLogout }) => {
     }
     
     const irrigation: IrrigationEvent = {
-      id: `irr${Date.now()}`,
+      id: `irr-${Date.now()}`,
       ...newIrrigation
     };
     
@@ -242,7 +271,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ role, onLogout }) => {
     }
     
     const preference: BuyerPreference = {
-      id: `pref${Date.now()}`,
+      id: `pref-${Date.now()}`,
       ...newPreference
     };
     

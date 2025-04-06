@@ -72,8 +72,8 @@ const Index = () => {
   };
   
   // Function to handle auth navigation that's limited to auth pages and dashboard
-  const handleAuthNavigation = (page: "login" | "signup" | "otp" | "dashboard") => {
-    if (page === "login" || page === "signup" || page === "otp" || page === "dashboard") {
+  const handleAuthNavigation = (page: "login" | "signup" | "otp" | "dashboard" | "welcome") => {
+    if (page === "login" || page === "signup" || page === "otp" || page === "dashboard" || page === "welcome") {
       navigateTo(page);
     }
   };

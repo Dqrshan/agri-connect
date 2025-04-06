@@ -1,10 +1,10 @@
-
 import React, { useState, useRef, useEffect } from "react";
-import { Camera, ImagePlus, Loader2, AlertTriangle, CheckCircle } from "lucide-react";
+import { Camera, ImagePlus, Loader2, AlertTriangle, CheckCircle, X } from "lucide-react";
 import { toast } from "../hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ScanResult {
   id: string;
@@ -14,6 +14,7 @@ interface ScanResult {
   confidence: number;
   diagnosis: string;
   recommendations: string[];
+  imageUrl?: string;
 }
 
 const Scanner: React.FC = () => {
@@ -22,149 +23,164 @@ const Scanner: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [scanResults, setScanResults] = useState<ScanResult[]>([]);
   const [previousScans, setPreviousScans] = useState<ScanResult[]>([]);
+  const [selectedScan, setSelectedScan] = useState<ScanResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Load previous scans from localStorage on component mount
   useEffect(() => {
-    const savedScans = localStorage.getItem('previousScans');
-    if (savedScans) {
-      setPreviousScans(JSON.parse(savedScans));
-    }
+    const loadScans = () => {
+      const savedScans = localStorage.getItem('cropScannerScans');
+      if (savedScans) {
+        try {
+          const parsedScans = JSON.parse(savedScans);
+          setPreviousScans(parsedScans);
+        } catch (error) {
+          console.error("Failed to parse saved scans:", error);
+          localStorage.removeItem('cropScannerScans');
+        }
+      }
+    };
+    loadScans();
   }, []);
 
   // Save scans to localStorage whenever they change
   useEffect(() => {
     if (previousScans.length > 0) {
-      localStorage.setItem('previousScans', JSON.stringify(previousScans));
+      localStorage.setItem('cropScannerScans', JSON.stringify(previousScans));
     }
   }, [previousScans]);
 
-  const startScanning = () => {
-    setIsScanning(true);
-    
-    // Simulate AI processing delay
-    setTimeout(() => {
-      setIsScanning(false);
-      setShowResults(true);
-      
-      // Generate mock scan result
-      const mockResult: ScanResult = {
-        id: `SCAN${Date.now()}`,
-        date: new Date().toISOString().split('T')[0],
-        cropName: "Tomato",
-        healthStatus: Math.random() > 0.5 ? "healthy" : "diseased",
-        confidence: Math.floor(Math.random() * 30) + 70, // 70-99%
-        diagnosis: Math.random() > 0.5 
-          ? "Early signs of leaf blight detected. The fungal infection is starting to affect the lower leaves."
-          : "The plant appears healthy with good leaf color and development. No signs of disease or pest damage.",
-        recommendations: Math.random() > 0.5 
-          ? [
-              "Apply copper-based fungicide as soon as possible", 
-              "Improve air circulation around plants",
-              "Avoid overhead watering to keep leaves dry",
-              "Remove affected leaves to prevent spread"
-            ]
-          : [
-              "Continue regular watering schedule", 
-              "Maintain current fertilization program",
-              "Monitor for any changes in leaf color or texture",
-              "Consider harvesting within 2-3 weeks based on maturity"
-            ]
-      };
-      
-      // Update scan results
-      setScanResults([mockResult]);
-      
-      // Add to previous scans
-      setPreviousScans(prev => [mockResult, ...prev].slice(0, 10)); // Keep only most recent 10 scans
+  const analyzeImageWithGemini = async (imageBase64: string) => {
+    try {
+      const prompt = `
+        Analyze this agricultural crop image and provide a detailed assessment in the following JSON format:
+        {
+          "cropName": "identified crop name",
+          "healthStatus": "healthy/diseased/pest/nutrient_deficiency",
+          "confidence": "percentage confidence in analysis",
+          "diagnosis": "detailed diagnosis of plant health",
+          "recommendations": ["array", "of", "recommendations"]
+        }
+        
+        Be specific about any diseases, pests, or nutrient deficiencies detected. 
+        Provide practical recommendations for treatment or maintenance.
+        If the image doesn't contain a recognizable crop, return "unknown" for cropName.
+      `;
 
-      toast({
-        title: "Scan Complete",
-        description: "AI analysis of your crop has been completed.",
+      // @ts-ignore
+      const apiKey = process.env.VITE_GEMINI_API_KEY.replaceAll('"', "").replaceAll(";", "");
+      // @ts-ignore
+      const response = await fetch((`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              {
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: imageBase64.split(',')[1]
+                }
+              }
+            ]
+          }]
+        }),
       });
-    }, 3000);
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const textResponse = data.candidates[0].content.parts[0].text;
+      
+      try {
+        const jsonStart = textResponse.indexOf('{');
+        const jsonEnd = textResponse.lastIndexOf('}') + 1;
+        const jsonString = textResponse.slice(jsonStart, jsonEnd);
+        const result = JSON.parse(jsonString);
+        
+        return {
+          ...result,
+          confidence: parseInt(result.confidence) || 80
+        };
+      } catch (e) {
+        console.error("Failed to parse JSON from response:", textResponse);
+        throw new Error("AI response format error");
+      }
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      throw error;
+    }
+  };
+
+  const startScanning = async () => {
+    setIsScanning(true);
+    try {
+      toast({
+        title: "Camera Not Implemented",
+        description: "Camera capture functionality would be implemented in a production app",
+      });
+      setIsScanning(false);
+    } catch (error) {
+      console.error("Scanning error:", error);
+      setIsScanning(false);
+      toast({
+        title: "Scan Failed",
+        description: "Could not complete the scan. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
-    // Create URL for the selected image
     const imageUrl = URL.createObjectURL(file);
     setSelectedImage(imageUrl);
-    
-    // Start the scanning process
     setIsScanning(true);
     
-    // Simulate AI processing delay
-    setTimeout(() => {
-      setIsScanning(false);
-      setShowResults(true);
-      
-      // Generate mock scan result for uploaded image
-      const cropTypes = ["Tomato", "Potato", "Wheat", "Rice", "Cotton"];
-      const healthStatuses: ScanResult['healthStatus'][] = ["healthy", "diseased", "pest", "nutrient_deficiency"];
-      
-      const mockResult: ScanResult = {
-        id: `SCAN${Date.now()}`,
-        date: new Date().toISOString().split('T')[0],
-        cropName: cropTypes[Math.floor(Math.random() * cropTypes.length)],
-        healthStatus: healthStatuses[Math.floor(Math.random() * healthStatuses.length)],
-        confidence: Math.floor(Math.random() * 20) + 80, // 80-99%
-        diagnosis: "",
-        recommendations: []
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+        const analysis = await analyzeImageWithGemini(base64Image);
+        
+        const scanResult: ScanResult = {
+          id: `SCAN-${Date.now()}`,
+          date: new Date().toISOString(),
+          cropName: analysis.cropName || "Unknown Crop",
+          healthStatus: analysis.healthStatus || "healthy",
+          confidence: analysis.confidence,
+          diagnosis: analysis.diagnosis || "No specific diagnosis available",
+          recommendations: analysis.recommendations || ["No specific recommendations"],
+          imageUrl: imageUrl
+        };
+        
+        setScanResults([scanResult]);
+        setPreviousScans(prev => [scanResult, ...prev].slice(0, 20)); // Keep last 20 scans
+        setShowResults(true);
+        setIsScanning(false);
+        
+        toast({
+          title: "Scan Complete",
+          description: "AI analysis of your uploaded image has been completed.",
+        });
       };
-
-      // Set diagnosis and recommendations based on health status
-      switch (mockResult.healthStatus) {
-        case "healthy":
-          mockResult.diagnosis = "The crop appears healthy with good coloration and development. No signs of disease or pest damage detected.";
-          mockResult.recommendations = [
-            "Continue regular watering schedule", 
-            "Maintain current fertilization program",
-            "Monitor for any changes in leaf color or texture"
-          ];
-          break;
-        case "diseased":
-          mockResult.diagnosis = "Signs of fungal infection detected. Affected areas show discoloration and lesions characteristic of blight.";
-          mockResult.recommendations = [
-            "Apply appropriate fungicide as soon as possible", 
-            "Improve air circulation around plants",
-            "Avoid overhead watering to keep leaves dry",
-            "Remove severely affected parts to prevent spread"
-          ];
-          break;
-        case "pest":
-          mockResult.diagnosis = "Evidence of pest infestation detected. Leaf damage patterns indicate possible aphid or mite presence.";
-          mockResult.recommendations = [
-            "Apply neem oil or appropriate insecticide", 
-            "Introduce beneficial insects like ladybugs if available",
-            "Check undersides of leaves where pests often hide",
-            "Monitor daily for pest population changes"
-          ];
-          break;
-        case "nutrient_deficiency":
-          mockResult.diagnosis = "Signs of nutrient deficiency observed. Yellowing patterns and growth abnormalities suggest nitrogen or magnesium deficiency.";
-          mockResult.recommendations = [
-            "Apply balanced fertilizer with focus on missing nutrients", 
-            "Consider foliar feeding for faster uptake",
-            "Test soil pH as it may be affecting nutrient availability",
-            "Adjust watering schedule to prevent nutrient leaching"
-          ];
-          break;
-      }
-      
-      // Update scan results
-      setScanResults([mockResult]);
-      
-      // Add to previous scans
-      setPreviousScans(prev => [mockResult, ...prev].slice(0, 10)); // Keep only most recent 10 scans
-
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Analysis error:", error);
+      setIsScanning(false);
       toast({
-        title: "Scan Complete",
-        description: "AI analysis of your uploaded image has been completed.",
+        title: "Analysis Failed",
+        description: "Could not analyze the image. Please try again.",
+        variant: "destructive",
       });
-    }, 3000);
+    }
   };
   
   const triggerFileInput = () => {
@@ -181,61 +197,60 @@ const Scanner: React.FC = () => {
       fileInputRef.current.value = "";
     }
   };
+
+  const viewScanDetails = (scan: ScanResult) => {
+    setSelectedScan(scan);
+  };
+
+  const closeScanDetails = () => {
+    setSelectedScan(null);
+  };
   
   const getStatusIcon = (status: ScanResult['healthStatus']) => {
     switch (status) {
-      case "healthy":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case "diseased":
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case "pest":
-        return <AlertTriangle className="h-5 w-5 text-orange-500" />;
-      case "nutrient_deficiency":
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-      default:
-        return null;
+      case "healthy": return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case "diseased": return <AlertTriangle className="h-5 w-5 text-red-500" />;
+      case "pest": return <AlertTriangle className="h-5 w-5 text-orange-500" />;
+      case "nutrient_deficiency": return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      default: return null;
     }
   };
   
   const getStatusText = (status: ScanResult['healthStatus']) => {
     switch (status) {
-      case "healthy":
-        return "Healthy";
-      case "diseased":
-        return "Disease Detected";
-      case "pest":
-        return "Pest Infestation";
-      case "nutrient_deficiency":
-        return "Nutrient Deficiency";
-      default:
-        return "Unknown";
+      case "healthy": return "Healthy";
+      case "diseased": return "Disease Detected";
+      case "pest": return "Pest Infestation";
+      case "nutrient_deficiency": return "Nutrient Deficiency";
+      default: return "Unknown";
     }
   };
   
   const getStatusColor = (status: ScanResult['healthStatus']) => {
     switch (status) {
-      case "healthy":
-        return "bg-green-50 border-green-200 text-green-800";
-      case "diseased":
-        return "bg-red-50 border-red-200 text-red-800";
-      case "pest":
-        return "bg-orange-50 border-orange-200 text-orange-800";
-      case "nutrient_deficiency":
-        return "bg-yellow-50 border-yellow-200 text-yellow-800";
-      default:
-        return "bg-gray-50 border-gray-200 text-gray-800";
+      case "healthy": return "bg-green-50 border-green-200 text-green-800";
+      case "diseased": return "bg-red-50 border-red-200 text-red-800";
+      case "pest": return "bg-orange-50 border-orange-200 text-orange-800";
+      case "nutrient_deficiency": return "bg-yellow-50 border-yellow-200 text-yellow-800";
+      default: return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
   
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
-  
+
   return (
     <div className="container mx-auto p-4 pb-20">
       <h1 className="text-2xl font-bold mb-6">AI Crop Scanner</h1>
-      
+      <p className="inline-flex mb-4 items-center gap-2">Powered by <img src="/gemini.png" className="h-6 mb-2" /></p>
       {!showResults ? (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col items-center justify-center">
@@ -244,7 +259,11 @@ const Scanner: React.FC = () => {
                 <div className="animate-pulse flex flex-col items-center">
                   {selectedImage ? (
                     <div className="relative w-32 h-32 mb-4">
-                      <img src={selectedImage} alt="Selected crop" className="w-full h-full object-cover rounded-lg" />
+                      <img 
+                        src={selectedImage} 
+                        alt="Selected crop" 
+                        className="w-full h-full object-cover rounded-lg" 
+                      />
                       <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center rounded-lg">
                         <Loader2 size={48} className="text-white animate-spin" />
                       </div>
@@ -252,7 +271,7 @@ const Scanner: React.FC = () => {
                   ) : (
                     <Camera size={48} className="text-gray-400 mb-2" />
                   )}
-                  <p className="text-gray-500 mt-2">Analyzing crop health...</p>
+                  <p className="text-gray-500 mt-2">Analyzing crop health with AI...</p>
                 </div>
               </div>
             ) : (
@@ -308,7 +327,11 @@ const Scanner: React.FC = () => {
               {previousScans.length > 0 ? (
                 <div className="space-y-3">
                   {previousScans.map((scan) => (
-                    <div key={scan.id} className="border rounded-md p-3 flex items-center">
+                    <div 
+                      key={scan.id} 
+                      className="border rounded-md p-3 flex items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => viewScanDetails(scan)}
+                    >
                       {getStatusIcon(scan.healthStatus)}
                       <div className="ml-3 flex-1">
                         <div className="flex justify-between items-center">
@@ -346,10 +369,10 @@ const Scanner: React.FC = () => {
               </CardHeader>
               
               <CardContent>
-                {selectedImage && (
+                {result.imageUrl && (
                   <div className="mb-4 flex justify-center">
                     <img 
-                      src={selectedImage} 
+                      src={result.imageUrl} 
                       alt="Scanned crop" 
                       className="rounded-lg max-h-64 object-contain" 
                     />
@@ -385,6 +408,67 @@ const Scanner: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Scan Details Modal */}
+      <Dialog open={!!selectedScan} onOpenChange={closeScanDetails}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              {selectedScan && getStatusIcon(selectedScan.healthStatus)}
+              <span className="ml-2">
+                {selectedScan?.cropName} Scan Details
+              </span>
+              {/* <button 
+                onClick={closeScanDetails}
+                className="ml-auto p-1 rounded-full hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </button> */}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedScan && (
+            <div className="mt-4">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm text-gray-500">
+                  {formatDate(selectedScan.date)}
+                </span>
+                <span className="bg-white border rounded-full px-3 py-1 text-sm font-medium">
+                  Confidence: {selectedScan.confidence}%
+                </span>
+              </div>
+              
+              {selectedScan.imageUrl && (
+                <div className="mb-4 flex justify-center">
+                  <img 
+                    src={selectedScan.imageUrl} 
+                    alt="Scanned crop" 
+                    className="rounded-lg max-h-64 object-contain" 
+                  />
+                </div>
+              )}
+              
+              <Alert className={`mb-4 ${getStatusColor(selectedScan.healthStatus)}`}>
+                <AlertTitle className="flex items-center">
+                  {getStatusIcon(selectedScan.healthStatus)} {getStatusText(selectedScan.healthStatus)}
+                </AlertTitle>
+                <AlertDescription className="mt-2">
+                  {selectedScan.diagnosis}
+                </AlertDescription>
+              </Alert>
+              
+              <div className="mt-4">
+                <h3 className="font-medium mb-2">Recommendations:</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {selectedScan.recommendations.map((rec, index) => (
+                    <li key={index} className="text-gray-700">{rec}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
