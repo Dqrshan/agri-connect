@@ -62,22 +62,13 @@ Then edit `.env.local` with your API keys and configuration.
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) with your mobile device or using responsive design mode in your browser.
-
-## 📱 Screenshots
-
-![Welcome Screen](https://via.placeholder.com/250x500)
-![Farmer Dashboard](https://via.placeholder.com/250x500)
-![Crop Analysis](https://via.placeholder.com/250x500)
-![Transactions](https://via.placeholder.com/250x500)
+5. Open [http://localhost:8080](http://localhost:8080) with your mobile device or using responsive design mode in your browser.
 
 ## 🙏 Acknowledgments
 
 - Thanks to all the farmers and buyers who provided feedback during the design phase
 - [Gemini API](https://ai.google.dev/) for providing AI capabilities
-- [Supabase](https://supabase.io/) for the database infrastructure
-- [Next.js](https://nextjs.org/) for the development framework
-- [Vercel](https://vercel.com/) for hosting
+- [Netlify](https://netlify.app/) for hosting
 
 
 ---
