@@ -1,28 +1,14 @@
 exports.handler = async (event) => {
   try {
-    const { prompt, imageBase64 } = JSON.parse(event.body);
-    console.log(prompt);
+    const request = JSON.parse(event.body);
+    console.log(request);
     const apiKey = process.env.VITE_GEMINI_API_KEY.replaceAll('"', '').replaceAll("'", '');
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: imageBase64,
-                },
-              },
-            ],
-          },
-        ],
-      }),
+      body: JSON.stringify(request),
     });
 
     if (!response.ok) {
