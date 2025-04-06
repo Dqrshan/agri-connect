@@ -67,10 +67,7 @@ const Scanner: React.FC = () => {
         If the image doesn't contain a recognizable crop, return "unknown" for cropName.
       `;
 
-      // @ts-ignore
-      const apiKey = process.env.VITE_GEMINI_API_KEY.replaceAll('"', "").replaceAll(";", "");
-      // @ts-ignore
-      const response = await fetch((`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`), {
+      const response = await fetch('/api/analyze-image', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
