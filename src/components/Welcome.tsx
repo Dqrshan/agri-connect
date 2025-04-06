@@ -1,13 +1,23 @@
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "./Logo";
+import { useUser } from "../context/UserContext";
 
 const Welcome: React.FC = () => {
   const [isAnimated, setIsAnimated] = useState(false);
+  const { isAuthenticated } = useUser();
+  const navigate = useNavigate();
+  
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
   
   // Start animation after component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     setIsAnimated(true);
   }, []);
 
@@ -19,8 +29,8 @@ const Welcome: React.FC = () => {
         }`}
       >
         <Logo />
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">Welcome</h1>
-        <p className="text-gray-500 text-lg mb-4">Placeholder text</p>
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">AgriConnect</h1>
+        <p className="text-gray-500 text-lg mb-4">Connecting Farmers and Buyers</p>
       </div>
       
       <div 
@@ -51,8 +61,8 @@ const Welcome: React.FC = () => {
           isAnimated ? "opacity-100" : "opacity-0"
         }`}
       >
-        <p className="text-agri-primary font-medium">
-          Connecting Farmers and Buyers
+        <p className="text-indigo-600 font-medium">
+          The simple way to connect with agricultural markets
         </p>
       </div>
     </div>

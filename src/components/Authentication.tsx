@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp";
+import { useNavigate } from "react-router-dom";
+import { generateOTP, storeOTP, retrieveOTP, mockVerifyOTP, clearOTP } from "../utils/otpUtils";
+import { useUser } from "../context/UserContext";
+import OTPInput from "./OTPInput";
+import { toast } from "../hooks/use-toast";
 
 interface AuthProps {
   type: "login" | "signup" | "otp";
@@ -9,12 +13,40 @@ interface AuthProps {
 }
 
 const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
+  const navigate = useNavigate();
+  const { login } = useUser();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [fullName, setFullName] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
   const [role, setRole] = useState<"farmer" | "buyer" | "">("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+  const [sentOTP, setSentOTP] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Load from session storage for navigation between auth screens
+  useEffect(() => {
+    const storedPhone = sessionStorage.getItem("auth_phone");
+    const storedName = sessionStorage.getItem("auth_name");
+    const storedState = sessionStorage.getItem("auth_state");
+    const storedCity = sessionStorage.getItem("auth_city");
+    const storedRole = sessionStorage.getItem("auth_role") as "farmer" | "buyer" | "";
+    
+    if (storedPhone) setPhoneNumber(storedPhone);
+    if (storedName) setFullName(storedName);
+    if (storedState) setState(storedState);
+    if (storedCity) setCity(storedCity);
+    if (storedRole) setRole(storedRole);
+  }, []);
+  
+  // Save to session storage for navigation between auth screens
+  useEffect(() => {
+    if (phoneNumber) sessionStorage.setItem("auth_phone", phoneNumber);
+    if (fullName) sessionStorage.setItem("auth_name", fullName);
+    if (state) sessionStorage.setItem("auth_state", state);
+    if (city) sessionStorage.setItem("auth_city", city);
+    if (role) sessionStorage.setItem("auth_role", role);
+  }, [phoneNumber, fullName, state, city, role]);
   
   const handleOtpChange = (value: string) => {
     setOtp(value.split("").concat(Array(6 - value.length).fill("")));
@@ -22,16 +54,70 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (type === "login") {
-      // In a real app, this would verify the phone number and send OTP
-      onNavigate("otp");
-    } else if (type === "signup") {
-      // In a real app, this would register the user and send OTP
-      onNavigate("otp");
-    } else if (type === "otp") {
-      // In a real app, this would verify the OTP
-      onNavigate("dashboard");
-    }
+    setIsSubmitting(true);
+    
+    setTimeout(() => {
+      if (type === "login") {
+        // In a real app, this would verify the phone number with your backend
+        const newOTP = generateOTP();
+        storeOTP(phoneNumber, newOTP);
+        setSentOTP(newOTP);
+        console.log(`Generated OTP for login: ${newOTP}`);
+        toast({
+          title: "OTP Sent",
+          description: `OTP has been sent to ${phoneNumber}. For demo: ${newOTP}`,
+        });
+        onNavigate("otp");
+      } else if (type === "signup") {
+        // In a real app, this would register the user and send OTP
+        const newOTP = generateOTP();
+        storeOTP(phoneNumber, newOTP);
+        setSentOTP(newOTP);
+        console.log(`Generated OTP for signup: ${newOTP}`);
+        toast({
+          title: "OTP Sent",
+          description: `OTP has been sent to ${phoneNumber}. For demo: ${newOTP}`,
+        });
+        onNavigate("otp");
+      } else if (type === "otp") {
+        const inputOTP = otp.join("");
+        const storedOTP = retrieveOTP(phoneNumber);
+        
+        if (mockVerifyOTP(inputOTP, storedOTP || sentOTP)) {
+          // OTP is valid, authenticate the user
+          login(
+            phoneNumber, 
+            role as "farmer" | "buyer",
+            fullName,
+            state,
+            city
+          );
+          
+          // Clear the OTP and session data
+          clearOTP(phoneNumber);
+          sessionStorage.removeItem("auth_phone");
+          sessionStorage.removeItem("auth_name");
+          sessionStorage.removeItem("auth_state");
+          sessionStorage.removeItem("auth_city");
+          sessionStorage.removeItem("auth_role");
+          
+          toast({
+            title: "Success",
+            description: "You have been successfully authenticated",
+          });
+          
+          // Navigate to dashboard
+          onNavigate("dashboard");
+        } else {
+          toast({
+            title: "Invalid OTP",
+            description: "The OTP you entered is incorrect. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+      setIsSubmitting(false);
+    }, 1000); // Simulate network delay
   };
   
   const isFormValid = () => {
@@ -46,7 +132,7 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
         (role === "farmer" || role === "buyer")
       );
     } else if (type === "otp") {
-      return otp.every(digit => digit !== "");
+      return otp.join("").length === 6;
     }
     return false;
   };
@@ -75,10 +161,15 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
         )}
         
         {type === "otp" && (
-          <div className="flex justify-center mb-8">
-            <div className="h-16 w-16 rounded-full bg-indigo-500 flex items-center justify-center text-white text-2xl font-bold">
-              A
+          <div className="mb-8 text-center">
+            <div className="h-16 w-16 rounded-full bg-indigo-500 flex items-center justify-center text-white text-2xl font-bold mx-auto">
+              {fullName ? fullName.charAt(0).toUpperCase() : "A"}
             </div>
+            <h2 className="text-xl font-bold mt-4">Verification Code</h2>
+            <p className="text-gray-500 mt-1">
+              We have sent a verification code to your phone number
+            </p>
+            <p className="text-gray-800 font-medium mt-2">{phoneNumber}</p>
           </div>
         )}
         
@@ -205,25 +296,35 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
           )}
           
           {type === "otp" && (
-            <div className="space-y-8">
-              <div className="border border-gray-200 rounded-md p-3 mb-6">
-                <input
-                  type="text"
-                  className="w-full border-none text-center text-lg"
-                  placeholder="Enter your otp"
-                  onChange={(e) => {}}
-                />
-              </div>
+            <div className="space-y-6">
+              <p className="text-sm text-gray-600 mb-4">Enter the 6-digit code</p>
               
-              <div className="flex justify-between space-x-2">
-                {[1, 2, 3, 4, 5, 6].map((num) => (
-                  <div 
-                    key={num} 
-                    className="w-10 h-10 border border-gray-200 rounded-md flex items-center justify-center text-lg"
+              <OTPInput 
+                length={6} 
+                value={otp} 
+                onChange={handleOtpChange} 
+              />
+              
+              <div className="text-center mt-4">
+                <p className="text-sm text-gray-500">
+                  Didn't receive code?{" "}
+                  <button
+                    type="button"
+                    className="text-indigo-600 font-medium"
+                    onClick={() => {
+                      const newOTP = generateOTP();
+                      storeOTP(phoneNumber, newOTP);
+                      setSentOTP(newOTP);
+                      console.log(`Resent OTP: ${newOTP}`);
+                      toast({
+                        title: "OTP Resent",
+                        description: `New OTP has been sent. For demo: ${newOTP}`,
+                      });
+                    }}
                   >
-                    {num}
-                  </div>
-                ))}
+                    Resend
+                  </button>
+                </p>
               </div>
             </div>
           )}
@@ -231,12 +332,24 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
           <div className="mt-8">
             <button
               type="submit"
-              className="w-full py-3 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors"
-              disabled={!isFormValid()}
+              className={`w-full py-3 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors ${
+                isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+              disabled={!isFormValid() || isSubmitting}
             >
-              {type === "login" ? "Log In" : 
-               type === "signup" ? "Sign Up" : 
-               "Log In"}
+              {isSubmitting ? (
+                <span className="inline-flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                type === "login" ? "Log In" : 
+                type === "signup" ? "Sign Up" : 
+                "Verify"
+              )}
             </button>
           </div>
         </form>
