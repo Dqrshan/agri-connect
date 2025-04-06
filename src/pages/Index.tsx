@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Welcome from "../components/Welcome";
 import Authentication from "../components/Authentication";
 import FarmerDashboard from "../components/FarmerDashboard";
@@ -7,17 +8,46 @@ import BuyerDashboard from "../components/BuyerDashboard";
 import ProfileSection from "../components/ProfileSection";
 import Layout from "../components/Layout";
 
-type Page = "welcome" | "login" | "signup" | "otp" | "dashboard" | "profile";
+type Page = "welcome" | "login" | "signup" | "otp" | "dashboard" | "profile" | "transactions";
 type UserRole = "farmer" | "buyer" | null;
 
 const Index = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<Page>("welcome");
   const [userRole, setUserRole] = useState<UserRole>(null);
+  
+  // Set the current page based on the URL path
+  useEffect(() => {
+    const path = location.pathname.substring(1);
+    
+    if (path === "login") {
+      setCurrentPage("login");
+    } else if (path === "signup") {
+      setCurrentPage("signup");
+    } else if (path === "dashboard") {
+      setCurrentPage("dashboard");
+      if (!userRole) setUserRole("farmer"); // Default for demo
+    } else if (path === "profile") {
+      setCurrentPage("profile");
+    } else if (path === "transactions") {
+      setCurrentPage("transactions");
+    } else if (path === "") {
+      setCurrentPage("welcome");
+    }
+  }, [location.pathname, userRole]);
   
   // Function to handle navigation between pages
   const navigateTo = (page: Page, role?: UserRole) => {
     setCurrentPage(page);
     if (role) setUserRole(role);
+    
+    // Update the URL
+    if (page === "welcome") {
+      navigate("/");
+    } else {
+      navigate(`/${page}`);
+    }
     
     // This is a mock implementation
     // In a real app, we would store the authenticated user in a global state
@@ -67,7 +97,7 @@ const Index = () => {
   };
   
   // Determine if the navigation should be shown
-  const showNavigation = ["dashboard", "profile"].includes(currentPage) && userRole !== null;
+  const showNavigation = ["dashboard", "profile", "transactions"].includes(currentPage) && userRole !== null;
   
   return (
     <Layout showNavigation={showNavigation} role={userRole}>

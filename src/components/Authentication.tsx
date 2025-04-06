@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp";
 
 interface AuthProps {
   type: "login" | "signup" | "otp";
@@ -14,20 +15,10 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
   const [role, setRole] = useState<"farmer" | "buyer" | "">("");
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-      
-      // Auto-focus next input
-      if (value && index < 3) {
-        const nextInput = document.getElementById(`otp-${index + 1}`);
-        if (nextInput) nextInput.focus();
-      }
-    }
+  const handleOtpChange = (value: string) => {
+    setOtp(value.split("").concat(Array(6 - value.length).fill("")));
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -63,19 +54,34 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
   
   return (
     <div className="w-full max-w-md mx-auto p-4">
-      <div className="mb-8">
-        <Link to="/" className="inline-flex items-center text-agri-primary">
+      <div className="mb-6 flex items-center">
+        <button 
+          onClick={() => onNavigate(type === "otp" ? (phoneNumber ? "login" : "signup") : "welcome")} 
+          className="inline-flex items-center text-gray-700"
+        >
           <ArrowLeft size={20} className="mr-2" />
-          <span>Back</span>
-        </Link>
+        </button>
       </div>
       
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-2xl font-semibold mb-6 text-center">
-          {type === "login" ? "Login to AgriConnect" : 
-           type === "signup" ? "Create Account" : 
-           "Verify OTP"}
-        </h2>
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        {type !== "otp" && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Hello!</h2>
+            <p className="text-gray-500">
+              {type === "login" 
+                ? "Log In to your existing account" 
+                : "Sign Up to create an account"}
+            </p>
+          </div>
+        )}
+        
+        {type === "otp" && (
+          <div className="flex justify-center mb-8">
+            <div className="h-16 w-16 rounded-full bg-indigo-500 flex items-center justify-center text-white text-2xl font-bold">
+              A
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit}>
           {type === "login" && (
@@ -87,8 +93,8 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
                 <input
                   type="tel"
                   id="phone"
-                  className="agri-input"
-                  placeholder="Enter your 10-digit phone number"
+                  className="w-full p-3 bg-gray-100 rounded-md border border-gray-200"
+                  placeholder="Enter your phone number"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
                   required
@@ -101,13 +107,13 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
+                  Name
                 </label>
                 <input
                   type="text"
                   id="fullName"
-                  className="agri-input"
-                  placeholder="Enter your full name"
+                  className="w-full p-3 bg-gray-100 rounded-md border border-gray-200"
+                  placeholder="Enter your name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -122,8 +128,8 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
                   <input
                     type="text"
                     id="state"
-                    className="agri-input"
-                    placeholder="State"
+                    className="w-full p-3 bg-gray-100 rounded-md border border-gray-200"
+                    placeholder="Enter your state"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     required
@@ -137,8 +143,8 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
                   <input
                     type="text"
                     id="city"
-                    className="agri-input"
-                    placeholder="City"
+                    className="w-full p-3 bg-gray-100 rounded-md border border-gray-200"
+                    placeholder="Enter your city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     required
@@ -150,40 +156,45 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number
                 </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  className="agri-input"
-                  placeholder="Enter your 10-digit phone number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  required
-                />
+                <div className="flex items-center">
+                  <span className="inline-flex items-center px-3 py-3 rounded-l-md border border-r-0 border-gray-200 bg-gray-100 text-gray-500">
+                    (+91)
+                  </span>
+                  <input
+                    type="tel"
+                    id="phone"
+                    className="w-full p-3 bg-gray-100 rounded-r-md border border-gray-200"
+                    placeholder=""
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    required
+                  />
+                </div>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  I am a
+                  Are you a?
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
-                    className={`py-3 px-4 rounded-md border-2 transition-all ${
+                    className={`py-3 px-4 rounded-md border transition-all ${
                       role === "farmer"
-                        ? "border-agri-primary bg-agri-primary text-white"
-                        : "border-gray-300 hover:border-agri-primary"
+                        ? "border-indigo-500 bg-indigo-50 text-indigo-700 font-medium"
+                        : "border-gray-300 text-gray-700"
                     }`}
                     onClick={() => setRole("farmer")}
                   >
-                    Farmer
+                    Seller
                   </button>
                   
                   <button
                     type="button"
-                    className={`py-3 px-4 rounded-md border-2 transition-all ${
+                    className={`py-3 px-4 rounded-md border transition-all ${
                       role === "buyer"
-                        ? "border-agri-primary bg-agri-primary text-white"
-                        : "border-gray-300 hover:border-agri-primary"
+                        ? "border-indigo-500 bg-indigo-50 text-indigo-700 font-medium"
+                        : "border-gray-300 text-gray-700"
                     }`}
                     onClick={() => setRole("buyer")}
                   >
@@ -195,33 +206,25 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
           )}
           
           {type === "otp" && (
-            <div className="space-y-6">
-              <p className="text-gray-600 text-center">
-                We've sent a verification code to your phone number. Please enter it below.
-              </p>
-              
-              <div className="flex justify-center space-x-3">
-                {[0, 1, 2, 3].map((index) => (
-                  <input
-                    key={index}
-                    id={`otp-${index}`}
-                    type="text"
-                    maxLength={1}
-                    className="w-12 h-14 text-center text-xl font-semibold border-2 border-gray-300 rounded-md focus:border-agri-primary focus:ring-1 focus:ring-agri-primary outline-none"
-                    value={otp[index]}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                  />
-                ))}
+            <div className="space-y-8">
+              <div className="border border-gray-200 rounded-md p-3 mb-6">
+                <input
+                  type="text"
+                  className="w-full border-none text-center text-lg"
+                  placeholder="Enter your otp"
+                  onChange={(e) => {}}
+                />
               </div>
               
-              <div className="text-center">
-                <button
-                  type="button"
-                  className="text-agri-primary font-medium hover:underline"
-                  onClick={() => {/* In a real app, this would resend OTP */}}
-                >
-                  Resend Code
-                </button>
+              <div className="flex justify-between space-x-2">
+                {[1, 2, 3, 4, 5, 6].map((num) => (
+                  <div 
+                    key={num} 
+                    className="w-10 h-10 border border-gray-200 rounded-md flex items-center justify-center text-lg"
+                  >
+                    {num}
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -229,12 +232,12 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
           <div className="mt-8">
             <button
               type="submit"
-              className="agri-button w-full"
+              className="w-full py-3 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors"
               disabled={!isFormValid()}
             >
-              {type === "login" ? "Continue" : 
-               type === "signup" ? "Create Account" : 
-               "Verify & Continue"}
+              {type === "login" ? "Log In" : 
+               type === "signup" ? "Sign Up" : 
+               "Log In"}
             </button>
           </div>
         </form>
@@ -244,7 +247,7 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
             <p className="text-gray-600">
               Don't have an account?{" "}
               <button
-                className="text-agri-primary font-medium hover:underline"
+                className="text-indigo-600 font-medium hover:underline"
                 onClick={() => onNavigate("signup")}
               >
                 Sign up
@@ -258,7 +261,7 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
             <p className="text-gray-600">
               Already have an account?{" "}
               <button
-                className="text-agri-primary font-medium hover:underline"
+                className="text-indigo-600 font-medium hover:underline"
                 onClick={() => onNavigate("login")}
               >
                 Login
