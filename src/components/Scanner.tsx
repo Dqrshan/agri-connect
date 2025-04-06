@@ -67,7 +67,7 @@ const Scanner: React.FC = () => {
         If the image doesn't contain a recognizable crop, return "unknown" for cropName.
       `;
 
-      const response = await fetch('/api/analyze-image', {
+      const response = await fetch('/.netlify/functions/analyze-image', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
