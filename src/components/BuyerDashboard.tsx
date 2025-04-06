@@ -1,7 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import MarketTrends from "./MarketTrends";
-import { FileText, MapPin } from "lucide-react";
+import { FileText, MapPin, Bell, CheckCircle, ArrowRight, X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "../hooks/use-toast";
 
 const BuyerDashboard: React.FC = () => {
   // Get current date for the header
@@ -14,7 +16,7 @@ const BuyerDashboard: React.FC = () => {
   });
   
   // Dummy data for available crops
-  const availableCrops = [
+  const [availableCrops, setAvailableCrops] = useState([
     {
       id: 1,
       crop: "Tomatoes",
@@ -23,6 +25,7 @@ const BuyerDashboard: React.FC = () => {
       price: "₹48/kg",
       quantity: "300 kg available",
       distance: "15 km",
+      isFavorite: false,
     },
     {
       id: 2,
@@ -32,6 +35,7 @@ const BuyerDashboard: React.FC = () => {
       price: "₹32/kg",
       quantity: "500 kg available",
       distance: "8 km",
+      isFavorite: false,
     },
     {
       id: 3,
@@ -41,11 +45,89 @@ const BuyerDashboard: React.FC = () => {
       price: "₹35/kg",
       quantity: "250 kg available",
       distance: "12 km",
+      isFavorite: false,
     },
-  ];
+  ]);
+  
+  // Alerts for buyer
+  const [alerts, setAlerts] = useState([
+    {
+      id: "alert1",
+      type: "price",
+      title: "Price Drop Alert",
+      description: "Tomato prices have decreased by 10% in your favorite markets.",
+      isDismissed: false,
+    },
+    {
+      id: "alert2",
+      type: "availability",
+      title: "New Crop Available",
+      description: "Fresh potatoes now available from farmers in your network.",
+      isDismissed: false,
+    }
+  ]);
+  
+  const dismissAlert = (alertId: string) => {
+    setAlerts(alerts.map(alert => 
+      alert.id === alertId ? { ...alert, isDismissed: true } : alert
+    ));
+    
+    toast({
+      title: "Alert Dismissed",
+      description: "The alert has been dismissed successfully",
+    });
+  };
+  
+  const toggleFavorite = (cropId: number) => {
+    setAvailableCrops(availableCrops.map(crop => 
+      crop.id === cropId ? { ...crop, isFavorite: !crop.isFavorite } : crop
+    ));
+    
+    const crop = availableCrops.find(c => c.id === cropId);
+    if (crop) {
+      toast({
+        title: crop.isFavorite ? "Removed from Favorites" : "Added to Favorites",
+        description: `${crop.crop} has been ${crop.isFavorite ? "removed from" : "added to"} your favorites.`,
+      });
+    }
+  };
+  
+  const contactFarmer = (cropId: number) => {
+    const crop = availableCrops.find(c => c.id === cropId);
+    if (crop) {
+      toast({
+        title: "Contact Request Sent",
+        description: `Your interest in ${crop.crop} has been sent to ${crop.farmer}.`,
+      });
+    }
+  };
+  
+  const getAlertIcon = (type: string) => {
+    switch (type) {
+      case "price":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "availability":
+        return <Bell className="h-4 w-4 text-indigo-500" />;
+      default:
+        return <Bell className="h-4 w-4 text-yellow-500" />;
+    }
+  };
+  
+  const getAlertColor = (type: string) => {
+    switch (type) {
+      case "price":
+        return "border-green-500 bg-green-50";
+      case "availability":
+        return "border-indigo-500 bg-indigo-50";
+      default:
+        return "border-yellow-500 bg-yellow-50";
+    }
+  };
+  
+  const activeAlerts = alerts.filter(alert => !alert.isDismissed);
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-20">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -56,6 +138,32 @@ const BuyerDashboard: React.FC = () => {
           <span className="font-medium">A</span>
         </div>
       </div>
+      
+      {/* Alerts Section - Show only if there are active alerts */}
+      {activeAlerts.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-agri-text mb-3">Alerts for You</h2>
+          
+          <div className="space-y-3">
+            {activeAlerts.map((alert) => (
+              <Alert key={alert.id} className={`relative ${getAlertColor(alert.type)}`}>
+                <button 
+                  onClick={() => dismissAlert(alert.id)}
+                  className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+                <AlertTitle className="flex items-center font-medium">
+                  {getAlertIcon(alert.type)} <span className="ml-2">{alert.title}</span>
+                </AlertTitle>
+                <AlertDescription className="text-sm mt-1">
+                  {alert.description}
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Market Trends Section */}
       <MarketTrends />
@@ -87,17 +195,29 @@ const BuyerDashboard: React.FC = () => {
                 </div>
               </div>
               <div className="flex justify-between mt-3 pt-3 border-t border-gray-100">
-                <button className="text-sm text-agri-primary font-medium flex items-center">
+                <button
+                  onClick={() => toggleFavorite(item.id)}
+                  className={`text-sm font-medium flex items-center ${
+                    item.isFavorite ? "text-red-500" : "text-agri-primary"
+                  }`}
+                >
                   <FileText size={16} className="mr-1" />
-                  View Details
+                  {item.isFavorite ? "Saved" : "Save for Later"}
                 </button>
-                <button className="text-sm bg-agri-primary text-white px-4 py-1 rounded-full">
+                <button
+                  onClick={() => contactFarmer(item.id)}
+                  className="text-sm bg-indigo-500 text-white px-4 py-1 rounded-full"
+                >
                   Contact
                 </button>
               </div>
             </div>
           ))}
         </div>
+        
+        <button className="w-full mt-4 py-2 text-sm text-indigo-600 flex items-center justify-center">
+          View All Available Crops <ArrowRight size={16} className="ml-1" />
+        </button>
       </div>
       
       {/* Market News Section */}

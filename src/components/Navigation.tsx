@@ -34,12 +34,12 @@ const Navigation: React.FC<NavigationProps> = ({ role }) => {
           {role === "farmer" && (
             <Link 
               to="/scanner" 
-              className={`flex flex-col items-center p-2 ${currentPath === "/scanner" ? "text-indigo-600" : "text-gray-500"}`}
+              className={`flex flex-col items-center relative ${currentPath === "/scanner" ? "text-indigo-600" : "text-gray-500"}`}
             >
-              <div className="w-14 h-14 rounded-full border-2 border-gray-300 flex items-center justify-center -mt-8 bg-white">
-                <Camera size={26} className="text-gray-700" />
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center -mt-5 bg-white shadow-md ${currentPath === "/scanner" ? "bg-indigo-600" : "bg-white"}`}>
+                <Camera size={26} className={currentPath === "/scanner" ? "text-white" : "text-gray-700"} />
               </div>
-              <span className="text-xs mt-1 invisible">Scanner</span>
+              <span className="text-xs mt-1">Scanner</span>
             </Link>
           )}
           

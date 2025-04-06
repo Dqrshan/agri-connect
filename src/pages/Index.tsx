@@ -6,6 +6,8 @@ import Authentication from "../components/Authentication";
 import FarmerDashboard from "../components/FarmerDashboard";
 import BuyerDashboard from "../components/BuyerDashboard";
 import ProfileSection from "../components/ProfileSection";
+import TransactionsPage from "../components/TransactionsPage";
+import Scanner from "../components/Scanner";
 import Layout from "../components/Layout";
 import { useUser } from "../context/UserContext";
 import { toast } from "../hooks/use-toast";
@@ -113,22 +115,10 @@ const Index = () => {
         return userRole ? <ProfileSection role={userRole} onLogout={handleLogout} /> : null;
       
       case "transactions":
-        // In a real app this would be a transactions page component
-        return (
-          <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Transactions</h1>
-            <p className="text-gray-600">This is a placeholder for the transactions page.</p>
-          </div>
-        );
+        return <TransactionsPage />;
         
       case "scanner":
-        // In a real app this would be the scanner component
-        return (
-          <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Scanner</h1>
-            <p className="text-gray-600">This is a placeholder for the AI scanner page.</p>
-          </div>
-        );
+        return <Scanner />;
       
       default:
         return <Welcome />;
