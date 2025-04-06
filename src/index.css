@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 122 50% 33%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 25 17% 47%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 26 100% 50%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -30,7 +31,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 122 50% 33%;
 
     --radius: 0.5rem;
 
@@ -61,7 +62,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 122 50% 33%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -70,7 +71,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 26 100% 40%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -96,6 +97,37 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-agri-background text-agri-text antialiased;
+  }
+}
+
+/* Custom styles for AgriConnect */
+@layer components {
+  .agri-card {
+    @apply bg-agri-card rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-300;
+  }
+  
+  .agri-input {
+    @apply rounded-md border border-gray-300 px-4 py-3 focus:border-agri-primary focus:ring-1 focus:ring-agri-primary outline-none w-full;
+  }
+  
+  .agri-button {
+    @apply bg-agri-primary text-white font-medium py-3 px-6 rounded-md hover:bg-opacity-90 
+    transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  
+  .agri-button-secondary {
+    @apply bg-agri-secondary text-white font-medium py-3 px-6 rounded-md hover:bg-opacity-90 
+    transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  
+  .agri-button-accent {
+    @apply bg-agri-accent text-white font-medium py-3 px-6 rounded-md hover:bg-opacity-90 
+    transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  
+  .agri-button-outline {
+    @apply border-2 border-agri-primary text-agri-primary font-medium py-3 px-6 rounded-md 
+    hover:bg-agri-primary hover:text-white transition-all duration-200;
   }
 }

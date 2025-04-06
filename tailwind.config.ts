@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// AgriConnect custom colors
+				agri: {
+					primary: '#2E7D32',    // Forest green
+					secondary: '#8D6E63',  // Earth brown
+					accent: '#FF6D00',     // Bright orange
+					light: '#FFF8E1',      // Soft cream
+					background: '#F9FBF6', // Light green-white
+					card: '#FFFFFF',
+					text: '#263238',       // Dark blue-grey
+					muted: '#78909C',      // Blue-grey
 				}
 			},
 			borderRadius: {
@@ -84,11 +96,16 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-slow': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.7' },
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-slow': 'pulse-slow 3s ease-in-out infinite'
 			}
 		}
 	},
