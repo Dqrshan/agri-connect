@@ -109,7 +109,7 @@ const Scanner: React.FC = () => {
         throw new Error("AI response format error");
       }
     } catch (error) {
-      console.error("Error calling Gemini API:", error);
+      console.error("Error calling server-side API:", error);
       throw error;
     }
   };
