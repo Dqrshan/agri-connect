@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -56,7 +55,7 @@ const Authentication: React.FC<AuthProps> = ({ type, onNavigate }) => {
     <div className="w-full max-w-md mx-auto p-4">
       <div className="mb-6 flex items-center">
         <button 
-          onClick={() => onNavigate(type === "otp" ? (phoneNumber ? "login" : "signup") : "welcome")} 
+          onClick={() => onNavigate(type === "otp" ? (phoneNumber ? "login" : "signup") : "login")} 
           className="inline-flex items-center text-gray-700"
         >
           <ArrowLeft size={20} className="mr-2" />

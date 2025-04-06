@@ -57,6 +57,13 @@ const Index = () => {
     }
   };
   
+  // Function to handle auth navigation that's limited to auth pages and dashboard
+  const handleAuthNavigation = (page: "login" | "signup" | "otp" | "dashboard") => {
+    if (page === "login" || page === "signup" || page === "otp" || page === "dashboard") {
+      navigateTo(page);
+    }
+  };
+  
   // Function to render the current page content
   const renderPage = () => {
     switch (currentPage) {
@@ -69,15 +76,7 @@ const Index = () => {
         return (
           <Authentication 
             type={currentPage} 
-            onNavigate={(page: any) => {
-              if (page === "dashboard") {
-                // For demo purposes
-                const role = Math.random() > 0.5 ? "farmer" : "buyer";
-                navigateTo(page, role);
-              } else {
-                navigateTo(page);
-              }
-            }} 
+            onNavigate={handleAuthNavigation} 
           />
         );
       
